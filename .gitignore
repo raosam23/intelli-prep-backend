@@ -44,10 +44,6 @@ htmlcov/
 .coverage.*
 .cache/
 
-# SQL / DB / Migrations (if you track migrations, remove these lines)
-alembic/versions/
-migrations/
-
 # Logs and local databases
 *.log
 *.sqlite3
