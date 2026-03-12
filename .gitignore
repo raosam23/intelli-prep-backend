@@ -1,0 +1,88 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.envrc
+
+# Environment files (keep .env.example committed)
+.env
+.env.*.local
+.env.docker
+
+# Pytest cache
+.pytest_cache/
+
+# Type checkers
+.mypy_cache/
+.pyright/
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+.cache/
+
+# SQL / DB / Migrations (if you track migrations, remove these lines)
+alembic/versions/
+migrations/
+
+# Logs and local databases
+*.log
+*.sqlite3
+*.db
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Editor swap / backup files
+*~
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Node (if frontend present)
+node_modules/
+
+# Wheels
+*.whl
+
+# pyenv
+.python-version
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
