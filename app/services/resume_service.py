@@ -8,6 +8,7 @@ import io
 import json
 from sqlmodel import select
 from typing import Dict
+from datetime import datetime, timezone
 
 async def upload_resume(session: AsyncSession, user_id: uuid.UUID, file: UploadFile) -> ResumeResponse:
     file_bytes = await file.read()
@@ -67,3 +68,30 @@ async def delete_resume(session: AsyncSession, user_id: uuid.UUID, resume_id: uu
     await session.delete(resume)
     await session.commit()
     return {"message": "Resume deleted successfully"}
+
+async def update_resume(session: AsyncSession, user_id: uuid.UUID, resume_id: uuid.UUID, new_file: UploadFile) -> ResumeResponse:
+    resume = await session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+    if resume.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this resume")
+    file_bytes = await new_file.read()
+    file_like = io.BytesIO(file_bytes)
+    try:
+        with pdfplumber.open(file_like) as pdf:
+            all_text = []
+            for page in pdf.pages:
+                if text:= page.extract_text():
+                    all_text.append(text)
+        raw_text = "\n".join(all_text)
+        resume.file_name = new_file.filename
+        resume.raw_text = raw_text
+        resume.parsed_json = None
+        resume.updated_at = datetime.now(timezone.utc)
+        await session.commit()
+        await session.refresh(resume)
+        if resume.parsed_json:
+            resume.parsed_json = json.loads(resume.parsed_json)
+        return ResumeResponse.model_validate(resume)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error processing PDF: {str(e)}")
