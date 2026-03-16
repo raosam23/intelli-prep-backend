@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import init_db
 from contextlib import asynccontextmanager
-from app.api.routes import auth, resume
+from app.api.routes import auth, resume, job_application
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,6 +31,12 @@ app.include_router(
     resume.router,
     prefix='/api/resumes',
     tags=['resumes']
+)
+
+app.include_router(
+    job_application.router,
+    prefix='/api/job-applications',
+    tags=['job applications']
 )
 
 @app.get("/health")
