@@ -25,6 +25,7 @@ class InterviewState(TypedDict):
     focus_area: Optional[str]
     questions: List[Dict[str, Any]]
     current_question_index: int
+    current_question: Dict[str, Any]
     answers: List[Dict[str, Any]]
     follow_up_count: int
 

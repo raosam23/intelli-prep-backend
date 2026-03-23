@@ -5,6 +5,7 @@ import json
 
 system_prompt = """
     You are an expert interviewer. Your job is to evaluate a candidate's answer to an interview question and provide feedback on how well the answer addresses the question, as well as suggestions for improvement. You also should generate a score from 0 to 100 for the answers based on how well it addresses the question, the depth of the answer, and how well it demonstrates the candidate's skills and experience. You will be given the question, the candidate's answer, and the candidate's parsed resume and the parsed job description for context. Your evaluation should consider how well the answer addresses the question, the relevance and depth of the answer, and how well it demonstrates the candidate's skills and experience as they relate to the job description. Provide specific feedback on what was good about the answer and what could be improved, along with actionable suggestions for improvement. Return your evaluation in the following JSON format:
+
     {{
         "score": 80,
         "feedback": "The candidate provided a strong answer that directly addressed the question and demonstrated relevant skills and experience. They gave specific examples from their past work that showed how they have successfully handled similar situations. However, they could improve by providing more detail on the outcomes of their actions and how they measured success. Additionally, they could have mentioned any challenges they faced and how they overcame them to give a more complete picture of their experience."
@@ -25,7 +26,7 @@ async def answer_evaluator_node(state: InterviewState) -> InterviewState:
     try:
         chain = prompt | llm
         response = await chain.ainvoke({
-            "question": state["questions"][state["current_question_index"]],
+            "question": state["current_question"],
             "answer": state["answers"][-1],
             "parsed_resume": state["parsed_resume"],
             "parsed_jd": state["parsed_jd"]

@@ -19,7 +19,7 @@ async def follow_up_decider_node(state: InterviewState) -> InterviewState:
 
     user_prompt = "Based on the following evaluation of a candidate's answer to an interview question, decide whether a follow-up question is needed to further probe the candidate's understanding or to clarify their answer. If a follow-up question is needed, generate a specific follow-up question that is relevant to the original question and is based on the candidate's answer and the evaluation feedback. \n\n Original Question: {question} \n\n Candidate's Answer: {answer} \n\n Evaluation Score: {score} \n\n Evaluation Feedback: {feedback} \n\n Candidate's Parsed Resume: {parsed_resume} \n\n Parsed Job Description: {parsed_jd}"
 
-    previous_question = state["questions"][state["current_question_index"]]
+    previous_question = state["current_question"]
     previous_answer = state["answers"][-1]
     previous_score = previous_answer.get("score", 0)
     previous_feedback = previous_answer.get("feedback", "")
@@ -41,7 +41,7 @@ async def follow_up_decider_node(state: InterviewState) -> InterviewState:
         })
         decision = json.loads(str(response.content))
         if decision['follow_up_needed'] and state['follow_up_count'] < 2 and previous_score < 60:       
-            state['questions'].insert(state['current_question_index'], {
+            state['questions'].insert(state['current_question_index'] + 1, {
                 "question_text": decision['follow_up_question'],
                 "question_type": previous_question['question_type'],
                 "order_index": previous_question['order_index'] + 0.1

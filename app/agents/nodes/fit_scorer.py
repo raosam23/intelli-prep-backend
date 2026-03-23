@@ -10,6 +10,7 @@ system_prompt = """
     - Education Match: Assess the candidate's educational background against the education requirements specidied int the job description. Consider the degree type, major and the reputation of the educational institution.
     - Overall Fit: Based on the above factors, provide an overall fit score that indicates how well the candidate's resume matches the job description. The fit score should be a number between 0 and 100, where 0 indicates no fit and 100 indicates a perfect fit.
     You should return the fit score and the fit breakdown in a structured format that can be easily used in the interview preparation process. The structured format should be a JSON object with the following structure:
+
     {{ 
     "fit_score": 85.5,
     "fit_breakdown_score": {{
@@ -18,6 +19,7 @@ system_prompt = """
         "education_match": 85
         }}
     }}
+
     Return ONLY the JSON object as the response. Do not include any additional text or explanations or markdown formatting or backticks. The JSON should be parsable and should not contain any syntax errors.
     """
 
