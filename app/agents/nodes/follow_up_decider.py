@@ -1,7 +1,8 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.agents.schemas import FollowUpDeciderOutput
 from langchain_core.prompts import ChatPromptTemplate
-import json
+from typing import cast
 
 system_prompt = """
     You are an expert interviewer. Your job is to evaluate a candidate's answer to an interview question and based on the evaluation, you decide whether a follow-up question is needed to further probe the candidate's understanding or to clarify their answer. You will be given the original question, the candidate's answer, the evaluation score and feedback for the answer, as well as the candidate's parsed resume and the parsed job description for context. If you determine that a follow-up question is needed, then generate a specific follow-up question that is designed to probe deeper into the candidate's understanding or to clarify their answer. The follow-up question should be relevant to the original question and should be based on the candidate's answer and the evaluation feedback. If you determine that a follow-up question is not needed, then return null. Return your decision in the following JSON format:
@@ -30,16 +31,17 @@ async def follow_up_decider_node(state: InterviewState) -> InterviewState:
     ])
 
     try:
-        chain = prompt | llm
-        response = await chain.ainvoke({
+        structured_llm = llm.with_structured_output(FollowUpDeciderOutput)
+        chain = prompt | structured_llm
+        response: FollowUpDeciderOutput = cast(FollowUpDeciderOutput, await chain.ainvoke({
             "question": previous_question,
             "answer": previous_answer,
             "score": previous_score,
             "feedback": previous_feedback,
             "parsed_resume": state['parsed_resume'],
             "parsed_jd": state['parsed_jd']
-        })
-        decision = json.loads(str(response.content))
+        }))
+        decision = response.model_dump()
         if decision['follow_up_needed'] and state['follow_up_count'] < 2 and previous_score < 60:       
             state['questions'].insert(state['current_question_index'] + 1, {
                 "question_text": decision['follow_up_question'],

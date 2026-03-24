@@ -1,7 +1,8 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.agents.schemas import AnswerEvaluatorOutput
 from langchain_core.prompts import ChatPromptTemplate
-import json
+from typing import cast
 
 system_prompt = """
     You are an expert interviewer. Your job is to evaluate a candidate's answer to an interview question and provide feedback on how well the answer addresses the question, as well as suggestions for improvement. You also should generate a score from 0 to 100 for the answers based on how well it addresses the question, the depth of the answer, and how well it demonstrates the candidate's skills and experience. You will be given the question, the candidate's answer, and the candidate's parsed resume and the parsed job description for context. Your evaluation should consider how well the answer addresses the question, the relevance and depth of the answer, and how well it demonstrates the candidate's skills and experience as they relate to the job description. Provide specific feedback on what was good about the answer and what could be improved, along with actionable suggestions for improvement. Return your evaluation in the following JSON format:
@@ -24,16 +25,16 @@ async def answer_evaluator_node(state: InterviewState) -> InterviewState:
     ])
 
     try:
-        chain = prompt | llm
-        response = await chain.ainvoke({
+        structured_llm = llm.with_structured_output(AnswerEvaluatorOutput)
+        chain = prompt | structured_llm
+        response: AnswerEvaluatorOutput = cast(AnswerEvaluatorOutput, await chain.ainvoke({
             "question": state["current_question"],
             "answer": state["answers"][-1],
             "parsed_resume": state["parsed_resume"],
             "parsed_jd": state["parsed_jd"]
-        })
-        evaluation = json.loads(str(response.content))
-        state['answers'][-1]['score'] = evaluation['score']
-        state['answers'][-1]['feedback'] = evaluation['feedback']
+        }))
+        state['answers'][-1]['score'] = response.score
+        state['answers'][-1]['feedback'] = response.feedback
     except Exception as e:
         state['error'] = f"Error evaluating answer: {str(e)}"
     return state

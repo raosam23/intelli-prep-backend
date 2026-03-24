@@ -1,7 +1,8 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.agents.schemas import FinalEvaluatorOutput
 from langchain_core.prompts import ChatPromptTemplate
-import json
+from typing import cast
 
 system_prompt = """
     You are an expert hiring manager. Your job is to evaluate a candidate's overall performance in an interview and provide a final hiring recommendation. You will be given the candidate's parsed resume, the parsed job description, and all the interview questions and answers along with their scores and feedback.
@@ -49,16 +50,16 @@ async def final_evaluator_node(state: InterviewState) -> InterviewState:
         ("user", user_prompt)
     ])
 
-    chain = prompt | llm
-
     try:
-        response = await chain.ainvoke({
+        structured_llm = llm.with_structured_output(FinalEvaluatorOutput)
+        chain = prompt | structured_llm
+        response: FinalEvaluatorOutput = cast(FinalEvaluatorOutput, await chain.ainvoke({
             "parsed_resume": state['parsed_resume'],
             "parsed_jd": state['parsed_jd'],
             "questions": state['questions'],
             "answers": state['answers']
-        })
-        state['final_evaluation'] = json.loads(str(response.content))
+        }))
+        state['final_evaluation'] = response.model_dump()
     except Exception as e:
         state['error'] = f"Error evaluating final performance: {str(e)}"
     return state

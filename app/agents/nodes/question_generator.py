@@ -1,7 +1,8 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.agents.schemas import QuestionGeneratorOutput
 from langchain_core.prompts import ChatPromptTemplate
-import json
+from typing import cast
 
 system_prompt = """
     You are an expert interviewer. Your job is to generate tailored interview questions for a candidate based on their resume, the job description, and their fit analysis.
@@ -45,8 +46,9 @@ async def question_generator_node(state: InterviewState) -> InterviewState:
         ("user", user_prompt)
     ])
     try:
-        chain = prompt | llm
-        response = await chain.ainvoke({
+        structured_llm = llm.with_structured_output(QuestionGeneratorOutput)
+        chain = prompt | structured_llm
+        response: QuestionGeneratorOutput = cast(QuestionGeneratorOutput, await chain.ainvoke({
             "num_questions": state['num_questions'],
             "difficulty_level": state['difficulty'],
             "interview_type": state['interview_type'],
@@ -54,8 +56,8 @@ async def question_generator_node(state: InterviewState) -> InterviewState:
             "parsed_jd": state['parsed_jd'],
             "fit_breakdown_score": state['fit_breakdown_score'],
             "focus_area": state['focus_area'] or "none"
-        })
-        state['questions'] = json.loads(str(response.content))
+        }))
+        state['questions'] = [question.model_dump() for question in response.questions]
         state['current_question_index'] = 0
     except Exception as e:
         state['error'] = f"Error generating questions: {str(e)}"

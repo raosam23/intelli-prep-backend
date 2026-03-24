@@ -1,7 +1,8 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.agents.schemas import FitScorerOutput
 from langchain_core.prompts import ChatPromptTemplate
-import json
+from typing import cast
 
 system_prompt = """
     You are are a fit scorer agent. Your job is to compare the parsed resume against the parsed job description and provide a fit score that indicates how well the candidate's resume matches the requirements of the job description. You should analyze the following aspects to determine the fit score:
@@ -32,14 +33,14 @@ async def fit_scorer_node(state: InterviewState) -> InterviewState:
         ("user", user_prompt)
     ])
     try:
-        chain = prompt | llm
-        response = await chain.ainvoke({
+        structured_llm = llm.with_structured_output(FitScorerOutput)
+        chain = prompt | structured_llm
+        response: FitScorerOutput = cast(FitScorerOutput, await chain.ainvoke({
             "parsed_resume": state['parsed_resume'],
             "parsed_jd": state['parsed_jd']
-        })
-        fit_data = json.loads(str(response.content))
-        state['fit_score'] = fit_data['fit_score']
-        state['fit_breakdown_score'] = fit_data['fit_breakdown_score']
+        }))
+        state['fit_score'] = response.fit_score
+        state['fit_breakdown_score'] = response.fit_breakdown_score.model_dump()
     except Exception as e:
         state['error'] = f"Error calculating fit score: {str(e)}"
     return state
