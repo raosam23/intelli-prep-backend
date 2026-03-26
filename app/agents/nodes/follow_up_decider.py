@@ -1,5 +1,6 @@
 from app.core.llm import llm
 from app.agents.state import InterviewState
+from app.models.question import QuestionType
 from app.agents.schemas import FollowUpDeciderOutput
 from langchain_core.prompts import ChatPromptTemplate
 from typing import cast
@@ -43,10 +44,12 @@ async def follow_up_decider_node(state: InterviewState) -> InterviewState:
         }))
         decision = response.model_dump()
         if decision['follow_up_needed'] and state['follow_up_count'] < 2 and previous_score < 60:       
+            base_order = int(float(previous_question['order_index']))
+            follow_up_order = round(base_order + ((state['follow_up_count'] + 1) / 10), 1)
             state['questions'].insert(state['current_question_index'] + 1, {
                 "question_text": decision['follow_up_question'],
-                "question_type": previous_question['question_type'],
-                "order_index": previous_question['order_index'] + 0.1
+                "question_type": QuestionType.FOLLOWUP,
+                "order_index": follow_up_order
             })
             state['follow_up_count'] += 1
         else:

@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END, START
+from langgraph.checkpoint.memory import MemorySaver
 from app.agents.should_continue import should_continue
 from app.agents.nodes.resume_parser import resume_parser_node
 from app.agents.nodes.question_generator import question_generator_node
@@ -34,4 +35,8 @@ graph.add_conditional_edges("follow_up_decider", should_continue, {
 })
 graph.add_edge("final_evaluator", END)
 
-interview_graph = graph.compile()
+checkpoint_saver = MemorySaver()
+interview_graph = graph.compile(
+    checkpointer=checkpoint_saver,
+    interrupt_before=['answer_evaluator']
+)

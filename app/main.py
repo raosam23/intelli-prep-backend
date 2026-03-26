@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.db.database import init_db
 from contextlib import asynccontextmanager
 from app.api.routes import auth, resume, job_application, interview_session
+from app.api.websocket import interview_ws
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,7 +16,7 @@ app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # change if required
+    allow_origins=["http://localhost:3000", "http://localhost:8000", "ws://localhost:8000"], # change if required
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,6 +44,11 @@ app.include_router(
     interview_session.router,
     prefix='/api/interview-sessions',
     tags=['interview sessions']
+)
+
+app.include_router(
+    interview_ws.router,
+    tags=['interview websocket']
 )
 
 @app.get("/health")

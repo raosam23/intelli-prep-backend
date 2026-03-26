@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, ForeignKey
 from typing import Optional
 from enum import Enum
 
@@ -17,7 +17,9 @@ class Evaluation(SQLModel, table=True):
     __tablename__ = "evaluations"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    session_id: uuid.UUID = Field(foreign_key='interview_sessions.id', unique=True)
+    session_id: uuid.UUID = Field(
+        sa_column=Column(ForeignKey("interview_sessions.id", ondelete="CASCADE"), nullable=False, unique=True)
+    )
     communication_score: Optional[float] = None
     technical_score: Optional[float] = None
     problem_solving_score: Optional[float] = None

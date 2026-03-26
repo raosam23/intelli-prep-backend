@@ -3,7 +3,7 @@ from enum import Enum
 import uuid
 from typing import Optional
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, ForeignKey
 
 class ApplicationStatus(str, Enum):
     APPLIED = "applied"
@@ -16,8 +16,12 @@ class JobApplication(SQLModel, table=True):
     __tablename__ = "job_applications"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    resume_id: uuid.UUID = Field(foreign_key="resumes.id", index=True)
+    user_id: uuid.UUID = Field(
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    )
+    resume_id: uuid.UUID = Field(
+        sa_column=Column(ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True)
+    )
     jd_raw_text: str
     fit_score: Optional[float] = None
     fit_breakdown_score: Optional[str] = None
