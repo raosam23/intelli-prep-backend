@@ -7,7 +7,7 @@ from app.models.interview_session import InterviewSession, InterviewStatus
 from app.models.evaluation import Evaluation, Verdict
 from app.models.question import Question, QuestionType
 from app.models.answer import Answer
-from app.models.job_application import JobApplication
+from app.models.job_application import ApplicationStatus, JobApplication
 from app.models.resume import Resume
 from app.models.user import User
 from langchain_core.runnables.config import RunnableConfig
@@ -81,6 +81,12 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
                 "fit_score": current_state['fit_score'],
                 "fit_breakdown": current_state['fit_breakdown_score']
             })
+            job_application.fit_score = float(current_state.get('fit_score', 0.0))
+            job_application.fit_breakdown_score = json.dumps(current_state.get('fit_breakdown_score', {}))
+            job_application.status = ApplicationStatus.INTERVIEWING
+            job_application.updated_at = datetime.now(timezone.utc)
+            session.add(job_application)
+            await session.commit()
             current_question = dict(current_state["current_question"])
             if "order_index" in current_question:
                 current_question["order_index"] = round(float(current_question["order_index"]), 1)
@@ -172,10 +178,12 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
         except WebSocketDisconnect:
             await session.rollback()
             interview.status = InterviewStatus.INCOMPLETE
+            job_application.status = ApplicationStatus.APPLIED
             await session.commit()
         except Exception as e:
             await session.rollback()
             interview.status = InterviewStatus.INCOMPLETE
+            job_application.status = ApplicationStatus.APPLIED
             await session.commit()
             await websocket.send_json({
                 "type": "error",
