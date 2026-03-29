@@ -85,7 +85,10 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
             job_application.fit_breakdown_score = json.dumps(current_state.get('fit_breakdown_score', {}))
             job_application.status = ApplicationStatus.INTERVIEWING
             job_application.updated_at = datetime.now(timezone.utc)
+            resume.parsed_json = json.dumps(current_state.get('parsed_resume', {}))
+            resume.updated_at = datetime.now(timezone.utc)
             session.add(job_application)
+            session.add(resume)
             await session.commit()
             current_question = dict(current_state["current_question"])
             if "order_index" in current_question:
@@ -158,7 +161,16 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
                     )
                     session.add(evaluation)
                     interview.status = InterviewStatus.COMPLETED
+                    interview.feedback  = "\n".join(final_evaluation.get('improvement_tips', []))
+                    interview.updated_at = datetime.now(timezone.utc)
                     session.add(interview)
+                    if final_evaluation.get('verdict') in [Verdict.HIRE, Verdict.STRONG_HIRE]:
+                        job_application.status = ApplicationStatus.APPROVED
+                        job_application.updated_at = datetime.now(timezone.utc)
+                    elif final_evaluation.get('verdict') in [Verdict.NO_HIRE, Verdict.STRONG_NO_HIRE]:
+                        job_application.status = ApplicationStatus.REJECTED
+                        job_application.updated_at = datetime.now(timezone.utc)
+                    session.add(job_application)
                     await session.commit()
                     await websocket.send_json({
                         "type": "evaluation",
