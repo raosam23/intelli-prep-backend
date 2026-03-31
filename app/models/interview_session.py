@@ -13,7 +13,7 @@ class DifficultyLevel(str, Enum):
 
 class InterviewType(str, Enum):
     TECHNICAL = "technical"
-    BEHAVIOURAL = "behavioural"
+    BEHAVIORAL = "behavioral"
     MANAGERIAL = "managerial"
     MIXED = "mixed"
 

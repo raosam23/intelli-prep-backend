@@ -28,6 +28,14 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
             await websocket.send_json({"error": "Interview session not found"})
             await websocket.close()
             return
+        if interview.status == InterviewStatus.COMPLETED:
+            await websocket.send_json({"error": "Interview session already completed"})
+            await websocket.close()
+            return
+        if interview.status == InterviewStatus.INPROGRESS:
+            await websocket.send_json({"error": "Interview session already in progress"})
+            await websocket.close()
+            return
         job_application = await session.get(JobApplication, interview.job_application_id)
         if not job_application:
             await websocket.send_json({"error": "Job application not found"})
