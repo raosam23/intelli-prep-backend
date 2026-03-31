@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import init_db
 from contextlib import asynccontextmanager
-from app.api.routes import auth, resume, job_application, interview_session
+from app.api.routes import analytics, auth, resume, job_application, interview_session
 from app.api.websocket import interview_ws
 
 @asynccontextmanager
@@ -20,6 +20,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    analytics.router,
+    prefix="/api/analytics",
+    tags=["analytics"]
 )
 
 app.include_router(
