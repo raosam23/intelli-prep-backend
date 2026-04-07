@@ -22,3 +22,8 @@ async def login(request: LoginRequest, session: AsyncSession = Depends(get_sessi
 async def update_profile(request: UpdateProfileRequest, session: AsyncSession = Depends(get_session), current_user: User = Depends(get_current_user)) -> UpdateProfileResponse:
     """Endpoint to update the current user's profile information."""
     return await update_user_profile(session, current_user.id, request)
+
+@router.get('/me', response_model=UserResponse)
+async def get_profile(current_user: User = Depends(get_current_user)) -> UserResponse:
+    """Endpoint to retrieve the current user's profile information."""
+    return UserResponse.model_validate(current_user)
