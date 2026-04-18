@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import engine
 from app.agents.state import InterviewState
@@ -10,6 +10,7 @@ from app.models.answer import Answer
 from app.models.job_application import ApplicationStatus, JobApplication
 from app.models.resume import Resume
 from app.models.user import User
+from app.utils.security import decode_access_token
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.types import StateSnapshot
 from typing import cast
@@ -20,7 +21,11 @@ import json
 router = APIRouter()
 
 @router.websocket("/api/ws/interview/{session_id}")
-async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID):
+async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token: str = Query(...)):
+    payload = decode_access_token(token)
+    if not payload:
+        await websocket.close(code=4001)
+        return
     await websocket.accept()
     async with AsyncSession(engine, expire_on_commit=False) as session:
         interview = await session.get(InterviewSession, session_id)

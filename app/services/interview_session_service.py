@@ -57,8 +57,8 @@ async def delete_interview_session(session: AsyncSession, current_user: User, in
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Associated job application not found")
     if job_application.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to delete this interview session")
-    if interview_session.status != InterviewStatus.PENDING:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending interview sessions can be deleted")
+    if interview_session.status != InterviewStatus.PENDING and interview_session.status != InterviewStatus.INCOMPLETE:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending or incomplete interview sessions can be deleted")
     await session.delete(interview_session)
     await session.commit()
     return {"message": "Interview session deleted successfully"}
