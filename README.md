@@ -22,7 +22,7 @@ AI-powered mock interview platform. Users upload their resume and a job descript
 
 ```
 app/
-├── agents/          # LangGraph interview agent (graph, nodes, schemas, state)
+├── agents/          # LangGraph interview agent (graph, nodes, schemas, state, edge logic)
 ├── api/
 │   ├── routes/      # REST API route handlers
 │   └── websocket/   # WebSocket interview handler
@@ -97,6 +97,12 @@ All REST endpoints are prefixed with `/api`. Authentication is via `Authorizatio
 | `PUT`    | `/api/job-applications/{application_id}` | Yes  | Update a job application                       |
 | `DELETE` | `/api/job-applications/{application_id}` | Yes  | Delete a job application                       |
 
+### Analytics — `/api/analytics`
+
+| Method | Path                       | Auth | Description                                              |
+| ------ | -------------------------- | ---- | -------------------------------------------------------- |
+| `GET`  | `/api/analytics/dashboard` | Yes  | Get dashboard data (session history, fit scores, trends) |
+
 ### Interview Sessions — `/api/interview-sessions`
 
 | Method   | Path                                                           | Auth | Description                         |
@@ -121,6 +127,16 @@ Send answers as JSON:
 ```
 
 The server streams back questions and status updates as JSON throughout the session.
+
+---
+
+## Frontend
+
+The frontend for this project is maintained in a separate repository.
+
+> **[IntelliPrep Frontend →](https://github.com/raosam23/intelli-prep-frontend)**
+>
+> Refer to that repository for frontend installation and setup instructions.
 
 ---
 
