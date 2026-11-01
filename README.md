@@ -302,10 +302,10 @@ Mocking:
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes and pull requests to `main`:
+`.github/workflows/ci.yml` runs on pushes and pull requests to `main`. Lint, type checking, and tests are separate jobs, so a failure in one is visible on its own. Each job installs dependencies with `uv sync --frozen` (the dev group is included by default).
 
-1. Install dependencies with `uv sync --frozen` (the dev group, including pytest, is included by default).
-2. `ruff check` for pycodestyle and pyflakes errors. Line length and undefined names in stubs are ignored. Alembic revisions are excluded.
-3. `ruff format --check`, allowed to fail without failing the job.
-4. `pyright`, allowed to fail without failing the job.
-5. `pytest` with coverage of the `app` package. The job fails if coverage drops below 95%.
+| Job | What it runs |
+| --- | --- |
+| Lint | `ruff check` for pycodestyle and pyflakes (`E501` and `F821` ignored, Alembic excluded). `ruff format --check` is allowed to fail without failing the job. |
+| Type Check | `pyright`, allowed to fail without failing the job. |
+| Test | `pytest` with coverage of `app`. The job fails if coverage drops below 95%. |
