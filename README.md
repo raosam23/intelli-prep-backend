@@ -2,6 +2,18 @@
 
 [![CI](https://github.com/raosam23/intelli-prep-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/raosam23/intelli-prep-backend/actions/workflows/ci.yml)
 
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
+[![Pydantic](https://img.shields.io/badge/Pydantic-v2-E92063?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+
+[![uv](https://img.shields.io/badge/uv-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
+[![pytest](https://img.shields.io/badge/pytest-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+
 FastAPI backend for [IntelliPrep](https://github.com/raosam23/intelli-prep-frontend), an AI interview-prep app. A candidate uploads a resume, pastes a job description, and practices a mock interview. A LangGraph workflow parses both documents, scores how well the resume fits the role, asks tailored questions over a WebSocket, grades each answer, and finishes with a hiring verdict and improvement tips.
 
 The Next.js client lives in a separate repository: [raosam23/intelli-prep-frontend](https://github.com/raosam23/intelli-prep-frontend).
