@@ -24,23 +24,20 @@ system_prompt = """
     Return ONLY the JSON object as the response. Do not include any additional text or explanations or markdown formatting or backticks. The JSON should be parsable and should not contain any syntax errors.
     """
 
+
 async def fit_scorer_node(state: InterviewState) -> InterviewState:
-    """Compares the parsed resume against the parsed job description and provides a fit score that indicates how well the candidate's resume matches the requirements of the job description.
-    """
+    """Compares the parsed resume against the parsed job description and provides a fit score that indicates how well the candidate's resume matches the requirements of the job description."""
     user_prompt = "Compare the following parsed resume against the parsed job description and provide a fit score: \n\n Resume: {parsed_resume} \n\n Job Description: {parsed_jd}"
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
     try:
         structured_llm = llm.with_structured_output(FitScorerOutput)
         chain = prompt | structured_llm
-        response: FitScorerOutput = cast(FitScorerOutput, await chain.ainvoke({
-            "parsed_resume": state['parsed_resume'],
-            "parsed_jd": state['parsed_jd']
-        }))
-        state['fit_score'] = response.fit_score
-        state['fit_breakdown_score'] = response.fit_breakdown_score.model_dump()
+        response: FitScorerOutput = cast(
+            FitScorerOutput,
+            await chain.ainvoke({"parsed_resume": state["parsed_resume"], "parsed_jd": state["parsed_jd"]}),
+        )
+        state["fit_score"] = response.fit_score
+        state["fit_breakdown_score"] = response.fit_breakdown_score.model_dump()
     except Exception as e:
-        state['error'] = f"Error calculating fit score: {str(e)}"
+        state["error"] = f"Error calculating fit score: {str(e)}"
     return state

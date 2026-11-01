@@ -16,6 +16,7 @@ system_prompt = """
     Return ONLY the JSON object. No markdown, no backticks, no extra text. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def follow_up_decider_node(state: InterviewState) -> InterviewState:
     """Evaluate a candidate's answer to an interview question and based on the evaluation, decide whether a follow-up question is needed to further probe the candidate's understanding or to clarify their answer."""
 
@@ -26,37 +27,42 @@ async def follow_up_decider_node(state: InterviewState) -> InterviewState:
     previous_score = previous_answer.get("score", 0)
     previous_feedback = previous_answer.get("feedback", "")
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
 
     try:
         structured_llm = llm.with_structured_output(FollowUpDeciderOutput)
         chain = prompt | structured_llm
-        response: FollowUpDeciderOutput = cast(FollowUpDeciderOutput, await chain.ainvoke({
-            "question": previous_question,
-            "answer": previous_answer,
-            "score": previous_score,
-            "feedback": previous_feedback,
-            "parsed_resume": state['parsed_resume'],
-            "parsed_jd": state['parsed_jd']
-        }))
+        response: FollowUpDeciderOutput = cast(
+            FollowUpDeciderOutput,
+            await chain.ainvoke(
+                {
+                    "question": previous_question,
+                    "answer": previous_answer,
+                    "score": previous_score,
+                    "feedback": previous_feedback,
+                    "parsed_resume": state["parsed_resume"],
+                    "parsed_jd": state["parsed_jd"],
+                }
+            ),
+        )
         decision = response.model_dump()
-        if decision['follow_up_needed'] and state['follow_up_count'] < 2 and previous_score < 60:       
-            base_order = int(float(previous_question['order_index']))
-            follow_up_order = round(base_order + ((state['follow_up_count'] + 1) / 10), 1)
-            state['questions'].insert(state['current_question_index'] + 1, {
-                "question_text": decision['follow_up_question'],
-                "question_type": QuestionType.FOLLOWUP,
-                "order_index": follow_up_order
-            })
-            state['follow_up_count'] += 1
+        if decision["follow_up_needed"] and state["follow_up_count"] < 2 and previous_score < 60:
+            base_order = int(float(previous_question["order_index"]))
+            follow_up_order = round(base_order + ((state["follow_up_count"] + 1) / 10), 1)
+            state["questions"].insert(
+                state["current_question_index"] + 1,
+                {
+                    "question_text": decision["follow_up_question"],
+                    "question_type": QuestionType.FOLLOWUP,
+                    "order_index": follow_up_order,
+                },
+            )
+            state["follow_up_count"] += 1
         else:
-            state['follow_up_count'] = 0
-        state['current_question_index'] += 1
-        if state['current_question_index'] >= len(state['questions']):
-            state['is_complete'] = True
+            state["follow_up_count"] = 0
+        state["current_question_index"] += 1
+        if state["current_question_index"] >= len(state["questions"]):
+            state["is_complete"] = True
     except Exception as e:
-        state['error'] = f"Error deciding on follow-up question: {str(e)}"
+        state["error"] = f"Error deciding on follow-up question: {str(e)}"
     return state

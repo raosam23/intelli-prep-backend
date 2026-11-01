@@ -5,20 +5,19 @@ from typing import Optional
 from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime, ForeignKey
 
+
 class ApplicationStatus(str, Enum):
     APPLIED = "applied"
     INTERVIEWING = "interviewing"
     APPROVED = "approved"
     REJECTED = "rejected"
 
-class JobApplication(SQLModel, table=True):
 
+class JobApplication(SQLModel, table=True):
     __tablename__ = "job_applications"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
-    user_id: uuid.UUID = Field(
-        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    )
+    user_id: uuid.UUID = Field(sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True))
     resume_id: uuid.UUID = Field(
         sa_column=Column(ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True)
     )
@@ -26,5 +25,9 @@ class JobApplication(SQLModel, table=True):
     fit_score: Optional[float] = None
     fit_breakdown_score: Optional[str] = None
     status: ApplicationStatus = Field(default=ApplicationStatus.APPLIED, index=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True)
+    )

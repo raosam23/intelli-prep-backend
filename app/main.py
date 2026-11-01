@@ -6,56 +6,36 @@ from contextlib import asynccontextmanager
 from app.api.routes import analytics, auth, resume, job_application, interview_session
 from app.api.websocket import interview_ws
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # initialze database
     await init_db()
     yield
 
+
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8000", "ws://localhost:8000"], # change if required
+    allow_origins=["http://localhost:3000", "http://localhost:8000", "ws://localhost:8000"],  # change if required
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(
-    analytics.router,
-    prefix="/api/analytics",
-    tags=["analytics"]
-)
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 
-app.include_router(
-    auth.router,
-    prefix='/api/auth',
-    tags=['authentication']
-)
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 
-app.include_router(
-    resume.router,
-    prefix='/api/resumes',
-    tags=['resumes']
-)
+app.include_router(resume.router, prefix="/api/resumes", tags=["resumes"])
 
-app.include_router(
-    job_application.router,
-    prefix='/api/job-applications',
-    tags=['job applications']
-)
+app.include_router(job_application.router, prefix="/api/job-applications", tags=["job applications"])
 
-app.include_router(
-    interview_session.router,
-    prefix='/api/interview-sessions',
-    tags=['interview sessions']
-)
+app.include_router(interview_session.router, prefix="/api/interview-sessions", tags=["interview sessions"])
 
-app.include_router(
-    interview_ws.router,
-    tags=['interview websocket']
-)
+app.include_router(interview_ws.router, tags=["interview websocket"])
+
 
 @app.get("/health")
 def get_health():

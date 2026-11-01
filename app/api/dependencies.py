@@ -8,7 +8,10 @@ from app.utils.security import decode_access_token
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), session: AsyncSession = Depends(get_session)) -> User:
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security), session: AsyncSession = Depends(get_session)
+) -> User:
     """Helper function to retrieve the current user based on the JWT token"""
     token = credentials.credentials
     payload = decode_access_token(token)

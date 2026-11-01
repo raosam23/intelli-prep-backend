@@ -20,6 +20,7 @@ import json
 
 router = APIRouter()
 
+
 @router.websocket("/api/ws/interview/{session_id}")
 async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token: str = Query(...)):
     payload = decode_access_token(token)
@@ -89,16 +90,18 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token
             await interview_graph.ainvoke(state, config=config)
             snapshot: StateSnapshot = interview_graph.get_state(config=config)
             current_state: InterviewState = cast(InterviewState, snapshot.values)
-            await websocket.send_json({
-                "type": "fit_score",
-                "fit_score": current_state['fit_score'],
-                "fit_breakdown": current_state['fit_breakdown_score']
-            })
-            job_application.fit_score = float(current_state.get('fit_score', 0.0))
-            job_application.fit_breakdown_score = json.dumps(current_state.get('fit_breakdown_score', {}))
+            await websocket.send_json(
+                {
+                    "type": "fit_score",
+                    "fit_score": current_state["fit_score"],
+                    "fit_breakdown": current_state["fit_breakdown_score"],
+                }
+            )
+            job_application.fit_score = float(current_state.get("fit_score", 0.0))
+            job_application.fit_breakdown_score = json.dumps(current_state.get("fit_breakdown_score", {}))
             job_application.status = ApplicationStatus.INTERVIEWING
             job_application.updated_at = datetime.now(timezone.utc)
-            resume.parsed_json = json.dumps(current_state.get('parsed_resume', {}))
+            resume.parsed_json = json.dumps(current_state.get("parsed_resume", {}))
             resume.updated_at = datetime.now(timezone.utc)
             session.add(job_application)
             session.add(resume)
@@ -106,32 +109,34 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token
             current_question = dict(current_state["current_question"])
             if "order_index" in current_question:
                 current_question["order_index"] = round(float(current_question["order_index"]), 1)
-            await websocket.send_json({
-                "type": "question",
-                "question": current_question,
-                "question_number": current_state['current_question_index'] + 1,
-                "total_questions": current_state['num_questions']
-            })
-            while not current_state['is_complete']:
+            await websocket.send_json(
+                {
+                    "type": "question",
+                    "question": current_question,
+                    "question_number": current_state["current_question_index"] + 1,
+                    "total_questions": current_state["num_questions"],
+                }
+            )
+            while not current_state["is_complete"]:
                 data = await websocket.receive_json()
-                if data['type'] != 'answer':
+                if data["type"] != "answer":
                     continue
-                interview_graph.update_state(config=config, values={
-                    "answers": current_state["answers"] + [{
-                        "answer_text": data["answer"],
-                        "score": None,
-                        "feedback": None
-                    }],
-                    "error": None
-                })
+                interview_graph.update_state(
+                    config=config,
+                    values={
+                        "answers": current_state["answers"]
+                        + [{"answer_text": data["answer"], "score": None, "feedback": None}],
+                        "error": None,
+                    },
+                )
                 await interview_graph.ainvoke(None, config=config)
                 snapshot = interview_graph.get_state(config=config)
                 current_state = cast(InterviewState, snapshot.values)
-                if current_state['is_complete']:
-                    final_evaluation = current_state['final_evaluation']
+                if current_state["is_complete"]:
+                    final_evaluation = current_state["final_evaluation"]
                     db_questions = []
-                    for question in current_state['questions']:
-                        raw_order = float(question.get('order_index', 0))
+                    for question in current_state["questions"]:
+                        raw_order = float(question.get("order_index", 0))
                         is_follow_up = not raw_order.is_integer()
                         raw_type = question.get("question_type", QuestionType.TECHNICAL)
                         if isinstance(raw_type, QuestionType):
@@ -140,66 +145,65 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token
                             question_type = QuestionType(raw_type)
                         db_question = Question(
                             session_id=session_id,
-                            question_text=question['question_text'],
+                            question_text=question["question_text"],
                             question_type=question_type,
                             order_index=raw_order,
                             is_follow_up=is_follow_up,
-                            follow_up_to=None, #TODO: delete this from the database later, it is useless
-                            created_at= datetime.now(timezone.utc)
+                            follow_up_to=None,  # TODO: delete this from the database later, it is useless
+                            created_at=datetime.now(timezone.utc),
                         )
                         session.add(db_question)
                         db_questions.append(db_question)
                     await session.flush()
 
-                    for db_question, answer in zip(db_questions, current_state['answers']):
+                    for db_question, answer in zip(db_questions, current_state["answers"]):
                         db_answer = Answer(
                             question_id=db_question.id,
                             session_id=session_id,
-                            answer_text=answer.get('answer_text'),
+                            answer_text=answer.get("answer_text"),
                             audio_file_path=None,
-                            score=answer.get('score'),
-                            feedback=answer.get('feedback'),
-                            created_at= datetime.now(timezone.utc)
+                            score=answer.get("score"),
+                            feedback=answer.get("feedback"),
+                            created_at=datetime.now(timezone.utc),
                         )
                         session.add(db_answer)
 
                     evaluation = Evaluation(
                         session_id=session_id,
-                        communication_score=final_evaluation.get('communication_score'),
-                        technical_score=final_evaluation.get('technical_score'),
-                        problem_solving_score=final_evaluation.get('problem_solving_score'),
-                        overall_score=final_evaluation.get('overall_score'),
-                        verdict=Verdict(final_evaluation.get('verdict', 'no_decision')),
-                        improvement_tips_json=json.dumps(final_evaluation.get('improvement_tips', []))
+                        communication_score=final_evaluation.get("communication_score"),
+                        technical_score=final_evaluation.get("technical_score"),
+                        problem_solving_score=final_evaluation.get("problem_solving_score"),
+                        overall_score=final_evaluation.get("overall_score"),
+                        verdict=Verdict(final_evaluation.get("verdict", "no_decision")),
+                        improvement_tips_json=json.dumps(final_evaluation.get("improvement_tips", [])),
                     )
                     session.add(evaluation)
                     interview.status = InterviewStatus.COMPLETED
-                    interview.feedback  = "\n".join(final_evaluation.get('improvement_tips', []))
+                    interview.feedback = "\n".join(final_evaluation.get("improvement_tips", []))
                     interview.updated_at = datetime.now(timezone.utc)
                     session.add(interview)
-                    if final_evaluation.get('verdict') in [Verdict.HIRE, Verdict.STRONG_HIRE]:
+                    if final_evaluation.get("verdict") in [Verdict.HIRE, Verdict.STRONG_HIRE]:
                         job_application.status = ApplicationStatus.APPROVED
                         job_application.updated_at = datetime.now(timezone.utc)
-                    elif final_evaluation.get('verdict') in [Verdict.NO_HIRE, Verdict.STRONG_NO_HIRE]:
+                    elif final_evaluation.get("verdict") in [Verdict.NO_HIRE, Verdict.STRONG_NO_HIRE]:
                         job_application.status = ApplicationStatus.REJECTED
                         job_application.updated_at = datetime.now(timezone.utc)
                     session.add(job_application)
                     await session.commit()
-                    await websocket.send_json({
-                        "type": "evaluation",
-                        "final_evaluation": final_evaluation
-                    })
+                    await websocket.send_json({"type": "evaluation", "final_evaluation": final_evaluation})
                     break
                 else:
                     current_question = dict(current_state["current_question"])
                     if "order_index" in current_question:
                         current_question["order_index"] = round(float(current_question["order_index"]), 1)
-                    await websocket.send_json({
-                        "type": "question",
-                        "question": current_question,
-                        "question_number": current_state['current_question_index'] + 1,
-                        "total_questions": current_state['num_questions']
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "question",
+                            "question": current_question,
+                            "question_number": current_state["current_question_index"] + 1,
+                            "total_questions": current_state["num_questions"],
+                        }
+                    )
         except WebSocketDisconnect:
             await session.rollback()
             interview.status = InterviewStatus.INCOMPLETE
@@ -210,9 +214,8 @@ async def interview_websocket(websocket: WebSocket, session_id: uuid.UUID, token
             interview.status = InterviewStatus.INCOMPLETE
             job_application.status = ApplicationStatus.APPLIED
             await session.commit()
-            await websocket.send_json({
-                "type": "error",
-                "message": f"An error occurred during the interview process: {str(e)}"
-            })
+            await websocket.send_json(
+                {"type": "error", "message": f"An error occurred during the interview process: {str(e)}"}
+            )
         finally:
             await websocket.close()

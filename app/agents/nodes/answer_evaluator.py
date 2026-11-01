@@ -15,26 +15,29 @@ system_prompt = """
     Return ONLY the JSON object. No markdown, no backticks, no extra text. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def answer_evaluator_node(state: InterviewState) -> InterviewState:
     """Evaluates a candidate's answer to an interview question and provides feedback on how well the answer addresses the question, as well as suggestions for improvement."""
     user_prompt = "Evaluate the following answer to the interview question and provide a score from 0 to 100 along with feedback and suggestions for improvement. \n\n Question: {question} \n\n Candidate's Answer: {answer} \n\n Candidate's Parsed Resume: {parsed_resume} \n\n Parsed Job Description: {parsed_jd}"
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
 
     try:
         structured_llm = llm.with_structured_output(AnswerEvaluatorOutput)
         chain = prompt | structured_llm
-        response: AnswerEvaluatorOutput = cast(AnswerEvaluatorOutput, await chain.ainvoke({
-            "question": state["current_question"],
-            "answer": state["answers"][-1],
-            "parsed_resume": state["parsed_resume"],
-            "parsed_jd": state["parsed_jd"]
-        }))
-        state['answers'][-1]['score'] = response.score
-        state['answers'][-1]['feedback'] = response.feedback
+        response: AnswerEvaluatorOutput = cast(
+            AnswerEvaluatorOutput,
+            await chain.ainvoke(
+                {
+                    "question": state["current_question"],
+                    "answer": state["answers"][-1],
+                    "parsed_resume": state["parsed_resume"],
+                    "parsed_jd": state["parsed_jd"],
+                }
+            ),
+        )
+        state["answers"][-1]["score"] = response.score
+        state["answers"][-1]["feedback"] = response.feedback
     except Exception as e:
-        state['error'] = f"Error evaluating answer: {str(e)}"
+        state["error"] = f"Error evaluating answer: {str(e)}"
     return state

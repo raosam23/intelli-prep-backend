@@ -35,18 +35,16 @@ system_prompt = """
     Return ONLY the JSON object as the response. Do not include any additional text or explanations or markdown formatting or backticks. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def jd_analyzer_node(state: InterviewState) -> InterviewState:
     """Analyzes the job description and extracts relevant information to be used in the interview preparation process."""
     user_prompt = "Analyze the following job description and extract the relevant information: \n\n {jd_raw_text}"
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
     try:
         chain = prompt | llm
-        response = await chain.ainvoke({"jd_raw_text": state['jd_raw_text']})
+        response = await chain.ainvoke({"jd_raw_text": state["jd_raw_text"]})
         parsed_jd = json.loads(str(response.content))
-        state['parsed_jd'] = parsed_jd
+        state["parsed_jd"] = parsed_jd
     except Exception as e:
-        state['error'] = f"Error analyzing job description: {str(e)}"
+        state["error"] = f"Error analyzing job description: {str(e)}"
     return state

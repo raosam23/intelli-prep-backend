@@ -40,26 +40,29 @@ Note: verdict must be exactly one of: strong_hire, hire, no_decision, no_hire, s
 Return ONLY the JSON object. No markdown, no backticks, no extra text. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def final_evaluator_node(state: InterviewState) -> InterviewState:
     """Evaluates a candidate's overall performance in an interview and provides a final hiring recommendation."""
 
     user_prompt = "Evaluate the candidate's overall performance in the interview and provide a final hiring recommendation based on the following information: \n\n Parsed Resume: {parsed_resume} \n\n Parsed Job Description: {parsed_jd} \n\n Interview Questions: {questions} \n\n Candidate's Answers: {answers}"
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
 
     try:
         structured_llm = llm.with_structured_output(FinalEvaluatorOutput)
         chain = prompt | structured_llm
-        response: FinalEvaluatorOutput = cast(FinalEvaluatorOutput, await chain.ainvoke({
-            "parsed_resume": state['parsed_resume'],
-            "parsed_jd": state['parsed_jd'],
-            "questions": state['questions'],
-            "answers": state['answers']
-        }))
-        state['final_evaluation'] = response.model_dump()
+        response: FinalEvaluatorOutput = cast(
+            FinalEvaluatorOutput,
+            await chain.ainvoke(
+                {
+                    "parsed_resume": state["parsed_resume"],
+                    "parsed_jd": state["parsed_jd"],
+                    "questions": state["questions"],
+                    "answers": state["answers"],
+                }
+            ),
+        )
+        state["final_evaluation"] = response.model_dump()
     except Exception as e:
-        state['error'] = f"Error evaluating final performance: {str(e)}"
+        state["error"] = f"Error evaluating final performance: {str(e)}"
     return state

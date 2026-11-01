@@ -64,20 +64,18 @@ system_prompt = """
     Return ONLY the JSON object as the response. Do not include any additional text or explanations or markdown formatting or backticks. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def resume_parser_node(state: InterviewState) -> InterviewState:
     """
     Parses the resume from the state and updates the state with the parsed data.
     """
-    raw_resume = state['raw_resume']
+    raw_resume = state["raw_resume"]
     user_prompt = "Please parse the following resume and extract the relevant information:\n\n This is the raw resume {raw_resume}"
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
     try:
         chain = prompt | llm
         response = await chain.ainvoke({"raw_resume": raw_resume})
-        state['parsed_resume'] = json.loads(str(response.content))
+        state["parsed_resume"] = json.loads(str(response.content))
     except Exception as e:
-        state['error'] = f"Error parsing resume: {str(e)}"
+        state["error"] = f"Error parsing resume: {str(e)}"
     return state

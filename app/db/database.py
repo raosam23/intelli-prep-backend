@@ -9,9 +9,11 @@ engine = create_async_engine(
     pool_recycle=300,
 )
 
+
 async def get_session():
     async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
+
 
 async def init_db():
     async with engine.begin() as conn:

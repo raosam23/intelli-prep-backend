@@ -42,6 +42,7 @@ env/
 .coverage
 htmlcov/
 .coverage.*
+coverage.xml
 .cache/
 
 # Logs and local databases
