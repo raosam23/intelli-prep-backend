@@ -5,6 +5,7 @@ from sqlalchemy import Column, DateTime, ForeignKey
 from typing import Optional
 from enum import Enum
 
+
 class Verdict(str, Enum):
     STRONG_HIRE = "strong_hire"
     HIRE = "hire"
@@ -12,8 +13,8 @@ class Verdict(str, Enum):
     NO_HIRE = "no_hire"
     STRONG_NO_HIRE = "strong_no_hire"
 
+
 class Evaluation(SQLModel, table=True):
-    
     __tablename__ = "evaluations"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -26,4 +27,6 @@ class Evaluation(SQLModel, table=True):
     overall_score: Optional[float] = None
     verdict: Verdict = Field(default=Verdict.NO_DECISION, index=True)
     improvement_tips_json: Optional[str] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True)
+    )

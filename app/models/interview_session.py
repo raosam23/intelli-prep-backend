@@ -11,11 +11,13 @@ class DifficultyLevel(str, Enum):
     MID = "mid"
     SENIOR = "senior"
 
+
 class InterviewType(str, Enum):
     TECHNICAL = "technical"
     BEHAVIORAL = "behavioral"
     MANAGERIAL = "managerial"
     MIXED = "mixed"
+
 
 class InterviewStatus(str, Enum):
     PENDING = "pending"
@@ -25,7 +27,6 @@ class InterviewStatus(str, Enum):
 
 
 class InterviewSession(SQLModel, table=True):
-
     __tablename__ = "interview_sessions"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
@@ -38,5 +39,9 @@ class InterviewSession(SQLModel, table=True):
     focus_area: Optional[str] = None
     status: InterviewStatus = Field(default=InterviewStatus.PENDING, index=True)
     feedback: Optional[str] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), index=True)
+    )

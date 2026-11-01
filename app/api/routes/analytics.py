@@ -9,8 +9,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
 
+
 @router.get("/dashboard", response_model=DashboardResponse)
-async def get_dashboard(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)) -> DashboardResponse:
+async def get_dashboard(
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+) -> DashboardResponse:
     """Endpoint to retrieve dashboard data for the current user"""
     try:
         dashboard_data = await get_dashboard_data(session, user.id)

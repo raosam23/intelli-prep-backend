@@ -38,27 +38,30 @@ system_prompt = """
     Return ONLY the JSON array. No markdown, no backticks, no extra text. The JSON should be parsable and should not contain any syntax errors.
 """
 
+
 async def question_generator_node(state: InterviewState) -> InterviewState:
     """Generates tailored interview questions for a candidate based on their resume, the job description and their fit analysis."""
     user_prompt = "Generate {num_questions} {difficulty_level} {interview_type} interview questions for a candidate based on the following information: \n\n Parsed Resume: {parsed_resume} \n\n Parsed Job Description: {parsed_jd} \n\n Fit Breakdown Score: {fit_breakdown_score} \n\n Focus Area: {focus_area}"
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", user_prompt)
-    ])
+    prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("user", user_prompt)])
     try:
         structured_llm = llm.with_structured_output(QuestionGeneratorOutput)
         chain = prompt | structured_llm
-        response: QuestionGeneratorOutput = cast(QuestionGeneratorOutput, await chain.ainvoke({
-            "num_questions": state['num_questions'],
-            "difficulty_level": state['difficulty'],
-            "interview_type": state['interview_type'],
-            "parsed_resume": state['parsed_resume'],
-            "parsed_jd": state['parsed_jd'],
-            "fit_breakdown_score": state['fit_breakdown_score'],
-            "focus_area": state['focus_area'] or "none"
-        }))
-        state['questions'] = [question.model_dump() for question in response.questions]
-        state['current_question_index'] = 0
+        response: QuestionGeneratorOutput = cast(
+            QuestionGeneratorOutput,
+            await chain.ainvoke(
+                {
+                    "num_questions": state["num_questions"],
+                    "difficulty_level": state["difficulty"],
+                    "interview_type": state["interview_type"],
+                    "parsed_resume": state["parsed_resume"],
+                    "parsed_jd": state["parsed_jd"],
+                    "fit_breakdown_score": state["fit_breakdown_score"],
+                    "focus_area": state["focus_area"] or "none",
+                }
+            ),
+        )
+        state["questions"] = [question.model_dump() for question in response.questions]
+        state["current_question_index"] = 0
     except Exception as e:
-        state['error'] = f"Error generating questions: {str(e)}"
+        state["error"] = f"Error generating questions: {str(e)}"
     return state

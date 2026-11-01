@@ -1,5 +1,6 @@
 from typing import TypedDict, Dict, List, Optional, Any
 
+
 class InterviewState(TypedDict):
     # Session Info
     session_id: str

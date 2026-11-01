@@ -29,14 +29,10 @@ graph.add_edge("fit_scorer", "question_generator")
 graph.add_edge("question_generator", "interview_loop")
 graph.add_edge("interview_loop", "answer_evaluator")
 graph.add_edge("answer_evaluator", "follow_up_decider")
-graph.add_conditional_edges("follow_up_decider", should_continue, {
-    "interview_loop": "interview_loop",
-    "final_evaluator": "final_evaluator"
-})
+graph.add_conditional_edges(
+    "follow_up_decider", should_continue, {"interview_loop": "interview_loop", "final_evaluator": "final_evaluator"}
+)
 graph.add_edge("final_evaluator", END)
 
 checkpoint_saver = MemorySaver()
-interview_graph = graph.compile(
-    checkpointer=checkpoint_saver,
-    interrupt_before=['answer_evaluator']
-)
+interview_graph = graph.compile(checkpointer=checkpoint_saver, interrupt_before=["answer_evaluator"])
